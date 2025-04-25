@@ -3,3 +3,8 @@ pandas
 scikit-learn
 xgboost
 joblib
+google-cloud-bigquery
+google-auth
+git add requirements.txt
+git commit -m "Add BigQuery dependency"
+git push
