@@ -23,40 +23,31 @@ risk_choice = st.selectbox(
     ["Diabetes", "Heart Disease", "Cancer Risk"]
 )
 
-# Common Inputs
+# Use columns for layout
 col1, col2 = st.columns(2)
 
 with col1:
     age = st.slider("Age", 0, 100, 30)
     bmi = st.number_input("BMI", min_value=10.0, max_value=60.0, value=25.0)
     glucose = st.number_input("Glucose Level", 50, 300, 100)
+    thalach = st.number_input("Maximum Heart Rate (thalach)", 60, 220, 150)
 
 with col2:
     hba1c = st.number_input("HbA1c Level", 4.0, 14.0, 6.0)
     chol = st.number_input("Cholesterol Level", 100, 400, 200)
-    bp = st.number_input("Blood Pressure", 80, 200, 120)
-
-# Heart-specific inputs (conditionally shown)
-if risk_choice == "Heart Disease":
-    st.markdown("### Additional Heart Health Info:")
-    col3, col4, col5 = st.columns(3)
-    with col3:
-        thalach = st.number_input("Maximum Heart Rate (thalach)", 60, 220, 150)
-    with col4:
-        oldpeak = st.number_input("ST Depression (oldpeak)", 0.0, 6.0, 1.0)
-    with col5:
-        ca = st.number_input("Number of Major Vessels Colored (ca)", 0, 4, 0)
+    bp = st.number_input("Blood Pressure (trestbps)", 80, 200, 120)
+    ca = st.number_input("Number of Major Vessels Colored (ca)", 0, 4, 0)
 
 # Predict Button
 if st.button("Predict Risk"):
-    if risk_choice == "Diabetes":
+    if risk_choice == "Diabetes" or risk_choice == "Cancer Risk":
         X = pd.DataFrame([{
             "age": age,
             "bmi": bmi,
             "blood_glucose_level": glucose,
             "hba1c_level": hba1c
         }])
-        model = diabetes_model
+        model = diabetes_model if risk_choice == "Diabetes" else cancer_model
 
     elif risk_choice == "Heart Disease":
         X = pd.DataFrame([{
@@ -69,18 +60,12 @@ if st.button("Predict Risk"):
         }])
         model = heart_model
 
-    else:  # Cancer Risk
-        X = pd.DataFrame([{
-            "age": age,
-            "bmi": bmi,
-            "blood_glucose_level": glucose,
-            "hba1c_level": hba1c
-        }])
-        model = cancer_model
-
-    # Predict and display result
-    proba = model.predict_proba(X)[0, 1]
-    risk = "🔴 High Risk" if proba >= 0.5 else "🟢 Low Risk"
-
-    st.markdown(f"<h3>Prediction: {risk}</h3>", unsafe_allow_html=True)
-    st.markdown(f"<h4>Probability: {proba:.2%}</h4>", unsafe_allow_html=True)
+    # Run prediction
+    try:
+        proba = model.predict_proba(X)[0, 1]
+        risk = "🔴 High Risk" if proba >= 0.5 else "🟢 Low Risk"
+        st.markdown(f"<h3>Prediction: {risk}</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h4>Probability: {proba:.2%}</h4>", unsafe_allow_html=True)
+    except Exception as e:
+        st.error("⚠️ An error occurred during prediction.")
+        st.text(str(e))
