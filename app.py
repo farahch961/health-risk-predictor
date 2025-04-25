@@ -23,7 +23,7 @@ risk_choice = st.selectbox(
     ["Diabetes", "Heart Disease", "Cancer Risk"]
 )
 
-# Use columns for layout
+# Common Inputs
 col1, col2 = st.columns(2)
 
 with col1:
@@ -35,6 +35,17 @@ with col2:
     hba1c = st.number_input("HbA1c Level", 4.0, 14.0, 6.0)
     chol = st.number_input("Cholesterol Level", 100, 400, 200)
     bp = st.number_input("Blood Pressure", 80, 200, 120)
+
+# Heart-specific inputs (conditionally shown)
+if risk_choice == "Heart Disease":
+    st.markdown("### Additional Heart Health Info:")
+    col3, col4, col5 = st.columns(3)
+    with col3:
+        thalach = st.number_input("Maximum Heart Rate (thalach)", 60, 220, 150)
+    with col4:
+        oldpeak = st.number_input("ST Depression (oldpeak)", 0.0, 6.0, 1.0)
+    with col5:
+        ca = st.number_input("Number of Major Vessels Colored (ca)", 0, 4, 0)
 
 # Predict Button
 if st.button("Predict Risk"):
@@ -52,7 +63,9 @@ if st.button("Predict Risk"):
             "age": age,
             "trestbps": bp,
             "chol": chol,
-            "bmi": bmi
+            "thalach": thalach,
+            "oldpeak": oldpeak,
+            "ca": ca
         }])
         model = heart_model
 
@@ -65,6 +78,7 @@ if st.button("Predict Risk"):
         }])
         model = cancer_model
 
+    # Predict and display result
     proba = model.predict_proba(X)[0, 1]
     risk = "🔴 High Risk" if proba >= 0.5 else "🟢 Low Risk"
 
