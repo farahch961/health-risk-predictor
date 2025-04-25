@@ -88,40 +88,35 @@ if st.button("Predict Risk"):
     st.markdown(f"<h4>Probability: {proba:.2%}</h4>", unsafe_allow_html=True)
 
 
-# Set up credentials 
-key_path = os.path.join(script_dir, "capstone-project-457819-b26528d24a89.json")  # use your actual filename
-credentials = service_account.Credentials.from_service_account_file(key_path)
+    try:
+        # Set up credentials
+        key_path = os.path.join(script_dir, "capstone-project-457819-b26528d24a89.json")
+        credentials = service_account.Credentials.from_service_account_file(key_path)
+        client = bigquery.Client(credentials=credentials, project=credentials.project_id)
 
-# Initialize BigQuery client
-client = bigquery.Client(credentials=credentials, project=credentials.project_id)
+        # Build the record
+        record = {
+            "timestamp": pd.Timestamp.now(),
+            "risk_type": risk_choice,
+            "predicted_risk": "High Risk" if proba >= 0.5 else "Low Risk",
+            "probability": float(proba),
+            "age": int(age),
+            "bmi": float(bmi),
+            "blood_glucose_level": int(glucose),
+            "hba1c_level": float(hba1c),
+            "cholesterol": int(chol),
+            "blood_pressure": int(bp),
+            "thalach": int(thalach) if risk_choice == "Heart Disease" else None,
+            "oldpeak": float(oldpeak) if risk_choice == "Heart Disease" else None,
+            "ca": int(ca) if risk_choice == "Heart Disease" else None
+        }
 
-# Build the record
-record = {
-    "timestamp": pd.Timestamp.now(),
-    "risk_type": risk_choice,
-    "predicted_risk": "High Risk" if proba >= 0.5 else "Low Risk",
-    "probability": float(proba),
-    "age": int(age),
-    "bmi": float(bmi),
-    "blood_glucose_level": int(glucose),
-    "hba1c_level": float(hba1c),
-    "cholesterol": int(chol),
-    "blood_pressure": int(bp),
-    "thalach": int(thalach) if risk_choice == "Heart Disease" else None,
-    "oldpeak": float(oldpeak) if risk_choice == "Heart Disease" else None,
-    "ca": int(ca) if risk_choice == "Heart Disease" else None
-}
+        df_record = pd.DataFrame([record])
+        table_id = "capstone-project-457819.health_analytics.prediction_logs"
 
-# Convert to DataFrame
-df_record = pd.DataFrame([record])
+        job = client.load_table_from_dataframe(df_record, table_id)
+        job.result()
+        st.success("Prediction logged to BigQuery.")
+    except Exception as e:
+        st.warning(f"Failed to log to BigQuery: {e}")
 
-# Define the BigQuery destination table
-table_id = "capstone-project-457819.health_analytics.prediction_logs"  # modify if your table name is different
-
-# Upload to BigQuery
-try:
-    job = client.load_table_from_dataframe(df_record, table_id)
-    job.result()  # Wait until the upload finishes
-    st.success("Prediction logged to BigQuery.")
-except Exception as e:
-    st.warning(f"Failed to log to BigQuery: {e}")
