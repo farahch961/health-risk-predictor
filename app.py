@@ -1,11 +1,15 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import os
+
+# Get the path to the directory this script is in
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Load your models
-diabetes_model = joblib.load(r"C:\Users\farah\OneDrive\Desktop\Masters in data science\Capstone\Proactive Healthcare Analytics\Code\diabetes_model.pkl") 
-heart_model = joblib.load(r"C:\Users\farah\OneDrive\Desktop\Masters in data science\Capstone\Proactive Healthcare Analytics\Code\heart_model.pkl") 
-cancer_model = joblib.load(r"C:\Users\farah\OneDrive\Desktop\Masters in data science\Capstone\Proactive Healthcare Analytics\Code\cancer_model.pkl")  
+diabetes_model = joblib.load(os.path.join(script_dir, "diabetes_model.pkl"))
+heart_model    = joblib.load(os.path.join(script_dir, "heart_model.pkl"))
+cancer_model   = joblib.load(os.path.join(script_dir, "cancer_model.pkl"))
 
 # App Title
 st.title(" Proactive Healthcare Risk Predictor")
