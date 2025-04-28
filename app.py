@@ -4,6 +4,7 @@ import joblib
 import os
 from google.cloud import bigquery
 from google.oauth2 import service_account
+import json
 
 # Load your models
 diabetes_model = joblib.load("diabetes_model.pkl")
@@ -58,36 +59,34 @@ if st.button("Predict Risk"):
     st.markdown(f"<h3>Prediction: {risk}</h3>", unsafe_allow_html=True)
     st.markdown(f"<h4>Probability: {proba:.2%}</h4>", unsafe_allow_html=True)
 
-    try:
-        # Use Streamlit secrets for credentials
-        credentials = service_account.Credentials.from_service_account_info(
-            st.secrets["gcp_service_account"]
-        )
-        client = bigquery.Client(credentials=credentials, project=credentials.project_id)
+try:
+    # Use Streamlit secrets for credentials
+    credentials = service_account.Credentials.from_service_account_info(
+        json.loads(st.secrets["gcp_service_account"])
+    )
+    client = bigquery.Client(credentials=credentials, project=credentials.project_id)
 
-        # Build the record
-        record = {
-            "timestamp": pd.Timestamp.now(),
-            "risk_type": risk_choice,
-            "predicted_risk": "High Risk" if proba >= 0.5 else "Low Risk",
-            "probability": float(proba),
-            "age": int(age),
-            "bmi": float(bmi),
-            "blood_glucose_level": int(glucose),
-            "hba1c_level": float(hba1c),
-            "cholesterol": int(chol),
-            "blood_pressure": int(bp),
-            "thalach": int(thalach) if risk_choice == "Heart Disease" else None,
-            "oldpeak": float(oldpeak) if risk_choice == "Heart Disease" else None,
-            "ca": int(ca) if risk_choice == "Heart Disease" else None
-        }
+    # Build the record
+    record = {
+        "timestamp": pd.Timestamp.now(),
+        "risk_type": risk_choice,
+        "predicted_risk": "High Risk" if proba >= 0.5 else "Low Risk",
+        "probability": float(proba),
+        "age": int(age),
+        "bmi": float(bmi),
+        "blood_glucose_level": int(glucose),
+        "hba1c_level": float(hba1c),
+        "cholesterol": int(chol),
+        "blood_pressure": int(bp),
+        "thalach": int(thalach) if risk_choice == "Heart Disease" else None,
+        "oldpeak": float(oldpeak) if risk_choice == "Heart Disease" else None,
+        "ca": int(ca) if risk_choice == "Heart Disease" else None
+    }
 
-        df_record = pd.DataFrame([record])
-        table_id = "capstone-project-457819.health_analytics.prediction_logs"
-        job = client.load_table_from_dataframe(df_record, table_id)
-        job.result()
-        st.success("Prediction logged to BigQuery.")
-
-    except Exception as e:
-        st.warning(f"Failed to log to BigQuery: {e}")
-
+    df_record = pd.DataFrame([record])
+    table_id = "capstone-project-457819.health_analytics.prediction_logs"
+    job = client.load_table_from_dataframe(df_record, table_id)
+    job.result()
+    st.success("Prediction logged to BigQuery.")
+except Exception as e:
+    st.warning(f"Failed to log to BigQuery: {e}")
