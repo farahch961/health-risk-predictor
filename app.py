@@ -99,7 +99,7 @@ if st.button("Predict Risk"):
         }
 
         df_record = pd.DataFrame([record])
-        table_id = "capstone-project-457819.health_analytics.prediction_logs"
+        table_id = "capstone-project-457819.health_analytics.prediction_logs_v2"
 
         job = client.load_table_from_dataframe(df_record, table_id)
         job.result()
