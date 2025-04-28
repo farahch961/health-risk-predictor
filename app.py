@@ -60,13 +60,11 @@ if st.button("Predict Risk"):
     st.markdown(f"<h4>Probability: {proba:.2%}</h4>", unsafe_allow_html=True)
 
 try:
-    # Use Streamlit secrets for credentials
     credentials = service_account.Credentials.from_service_account_info(
-        json.loads(st.secrets["gcp_service_account"])
+        st.secrets["gcp_service_account"]
     )
     client = bigquery.Client(credentials=credentials, project=credentials.project_id)
 
-    # Build the record
     record = {
         "timestamp": pd.Timestamp.now(),
         "risk_type": risk_choice,
